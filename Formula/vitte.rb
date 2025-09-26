@@ -17,9 +17,10 @@ class Vitte < Formula
       s.gsub!(/"tests"\s*,?\s*/m, "")
     end
 
-    # build du CLI uniquement
+    # build uniquement le CLI
     cd "crates/vitte-cli" do
-      system "cargo", "install", *std_cargo_args
+      system "cargo", "build", "--release"
+      bin.install "target/release/vitte"
     end
   end
 
