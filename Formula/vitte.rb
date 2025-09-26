@@ -9,8 +9,8 @@ class Vitte < Formula
   depends_on "rust" => :build
 
   def install
-    system "cargo", "install", *std_cargo_args
-  end
+  system "cargo", "install", *std_cargo_args, "--path", "crates/vitte"
+end
 
   test do
     system "#{bin}/vitte", "--version"
