@@ -12,19 +12,15 @@ class Vitte < Formula
   depends_on "openssl@3"
 
   def install
-    # build du CLI
-    cd "crates/vitte-cli" do
-      system "cargo", "install", *std_cargo_args
+    # 1) Nettoie le workspace: enlève le membre "tests" absent du tarball
+    inreplace "Cargo.toml" do |s|
+      s.gsub!(/members\s*=\s*\[[^\]]*\]/m) do |block|
+        block.gsub(/"tests"\s*,?\s*/m, "")
+      end
     end
 
-    # copie dans ~/vitte/bin
-    vitte_dir = Pathname.new(Dir.home)/"vitte/bin"
-    vitte_dir.mkpath
-    (vitte_dir/"vitte").write <<~EOS
-      #!/bin/sh
-      exec "#{bin}/vitte" "$@"
-    EOS
-    (vitte_dir/"vitte").chmod 0755
+    # 2) Installe uniquement le CLI
+    system "cargo", "install", *std_cargo_args(path: "crates/vitte-cli")
   end
 
   test do
