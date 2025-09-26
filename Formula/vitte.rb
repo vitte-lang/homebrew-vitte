@@ -12,11 +12,16 @@ class Vitte < Formula
   depends_on "openssl@3"
 
   def install
-    # Retire le membre de workspace absent du tarball
-    inreplace "Cargo.toml" { |s| s.gsub!(/"tests"\s*,?\s*/m, "") }
+    # corrige le workspace en retirant le membre "tests" absent du tarball
+    inreplace "Cargo.toml" do |s|
+      s.gsub!(/"tests"\s*,?\s*/m, "")
+    end
 
-    # Installe uniquement le CLI dans bin/
-    system "cargo", "install", *std_cargo_args(path: "crates/vitte-cli")
+    # build uniquement le CLI
+    cd "crates/vitte-cli" do
+      system "cargo", "build", "--release"
+      bin.install "target/release/vitte"
+    end
   end
 
   test do
