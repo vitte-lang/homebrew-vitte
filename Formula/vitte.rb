@@ -12,12 +12,22 @@ class Vitte < Formula
   depends_on "openssl@3"
 
   def install
+    # build du CLI
     cd "crates/vitte-cli" do
       system "cargo", "install", *std_cargo_args
     end
+
+    # copie dans ~/vitte/bin
+    vitte_dir = Pathname.new(Dir.home)/"vitte/bin"
+    vitte_dir.mkpath
+    (vitte_dir/"vitte").write <<~EOS
+      #!/bin/sh
+      exec "#{bin}/vitte" "$@"
+    EOS
+    (vitte_dir/"vitte").chmod 0755
   end
 
   test do
-    system "#{bin}/vitte", "--version"
+    system bin/"vitte", "--version"
   end
 end
