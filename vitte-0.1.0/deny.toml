@@ -1,0 +1,182 @@
+# deny.toml — configuration cargo-deny (Vitte)
+# Sécurité (RustSec), hygiène des sources, licences, bans, et graphe multiplateforme.
+
+# ─────────────────────────────────────────────────────────────
+# Graphe analysé (cibles, features, exclusions)
+# ─────────────────────────────────────────────────────────────
+[graph]
+# Cibles majeures du marché (réduis si tu veux accélérer l’analyse)
+targets = [
+  # ---- Linux GNU/MUSL (desktop/serveurs/SBC) ----
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "i686-unknown-linux-gnu",
+  "riscv64gc-unknown-linux-gnu",
+  "powerpc64le-unknown-linux-gnu",
+  "s390x-unknown-linux-gnu",
+  "loongarch64-unknown-linux-gnu",
+
+  "x86_64-unknown-linux-musl",
+  "aarch64-unknown-linux-musl",
+  "arm-unknown-linux-gnueabihf",
+  "arm-unknown-linux-musleabihf",
+  "armv7-unknown-linux-gnueabihf",
+  "armv7-unknown-linux-musleabihf",
+
+  # ---- Android ----
+  "aarch64-linux-android",
+  "armv7-linux-androideabi",
+  "x86_64-linux-android",
+  "i686-linux-android",
+
+  # ---- Windows (MSVC & GNU) ----
+  "x86_64-pc-windows-msvc",
+  "aarch64-pc-windows-msvc",
+  "i686-pc-windows-msvc",
+  "x86_64-pc-windows-gnu",
+  "i686-pc-windows-gnu",
+
+  # ---- Apple macOS / iOS / tvOS / watchOS ----
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+  "aarch64-apple-ios",
+  "x86_64-apple-ios",         # simulateur Intel
+  "aarch64-apple-ios-sim",    # simulateur Apple Silicon
+  "aarch64-apple-tvos",
+  "aarch64-apple-tvos-sim",
+  "aarch64-apple-watchos",
+  "aarch64-apple-watchos-sim",
+
+  # ---- WebAssembly ----
+  "wasm32-unknown-unknown",
+  "wasm32-wasi",
+  "wasm32-wasip1",
+  "wasm32-unknown-emscripten",
+
+  # ---- BSD / Illumos / Haiku / Redox ----
+  "x86_64-unknown-freebsd",
+  "aarch64-unknown-freebsd",
+  "x86_64-unknown-openbsd",
+  "x86_64-unknown-netbsd",
+  "x86_64-unknown-dragonfly",
+  "x86_64-unknown-illumos",
+  "x86_64-unknown-haiku",
+  "x86_64-unknown-redox",
+
+  # ---- Fuchsia ----
+  "x86_64-unknown-fuchsia",
+  "aarch64-unknown-fuchsia",
+
+  # ---- Bare-metal / Embedded ----
+  "x86_64-unknown-none",
+  "thumbv6m-none-eabi",
+  "thumbv7m-none-eabi",
+  "thumbv7em-none-eabi",
+  "thumbv7em-none-eabihf",
+  "thumbv8m.base-none-eabi",
+  "thumbv8m.main-none-eabi",
+  "thumbv8m.main-none-eabihf",
+  "riscv32imac-unknown-none-elf",
+  "riscv64imac-unknown-none-elf",
+
+  # ---- CUDA (compute) ----
+  "nvptx64-nvidia-cuda"
+]
+all-features = true
+no-default-features = false
+# exclude-dev = true
+# exclude = ["some-internal-crate@0.1.0"]
+
+# Affichage (profondeur des features dans les diagnostics)
+[output]
+feature-depth = 1
+format = "human"
+quiet = false
+
+# ─────────────────────────────────────────────────────────────
+# RustSec / Avis de sécurité
+# ─────────────────────────────────────────────────────────────
+[advisories]
+db-urls = ["https://github.com/RustSec/advisory-db"]
+db-path = "$CARGO_HOME/advisory-dbs"
+vulnerability = "deny"
+unsound      = "deny"
+yanked       = "deny"
+unmaintained = "warn"
+notice       = "warn"
+severity-threshold = "low"
+ignore = [
+  # { id = "RUSTSEC-20YY-XXXX", reason = "justification circonstanciée" },
+]
+
+# ─────────────────────────────────────────────────────────────
+# Licences
+# ─────────────────────────────────────────────────────────────
+[licenses]
+confidence-threshold = 0.93
+allow = [
+  "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib",
+  "Unicode-DFS-2016", "BSL-1.0", "MPL-2.0"
+]
+copyleft = "deny"
+unused-allowed-license = "warn"
+
+[licenses.private]
+ignore = true
+registries = ["sekrets", "internal-registry"]
+
+[[licenses.exceptions]]
+name = "webpki-roots"
+allow = ["CDLA-Permissive-2.0"]
+
+[[licenses.clarify]]
+name = "ring"
+expression = "MIT AND ISC AND OpenSSL"
+license-files = [{ path = "LICENSE" }]
+
+# ─────────────────────────────────────────────────────────────
+# Bans (versions multiples, wildcards, interdits/alternatives)
+# ─────────────────────────────────────────────────────────────
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+highlight = "all"
+
+deny = [
+  { name = "openssl",     reason = "Préférer TLS pur Rust (ex: rustls) pour réduire la surface C." },
+  { name = "openssl-sys", reason = "Même motif : lier du C alourdit maintenance/sécu." },
+  { name = "git2",        reason = "Favoriser un équivalent 100% Rust (ex: gix) quand possible." }
+]
+
+skip = [
+  # { name = "getrandom", version = "0.2.16", reason = "Traîné par ring ; en attendant l’alignement." },
+]
+
+skip-tree = [
+  { name = "windows-sys", version = "0.52.0", reason = "Pivot Windows ; duplications fréquentes." },
+  { name = "windows-sys", version = "0.59.0", reason = "Pivot Windows ; duplications fréquentes." }
+]
+
+# ─────────────────────────────────────────────────────────────
+# Sources (registries & git)
+# ─────────────────────────────────────────────────────────────
+[sources]
+unknown-registry = "deny"
+unknown-git      = "deny"
+required-git-spec = "tag"  # en prod stricte, passe à "rev"
+
+allow-registry = [
+  "https://github.com/rust-lang/crates.io-index"
+  # "sparse+https://index.crates.io/",
+  # "https://sekretz.com/registry/index"
+]
+
+allow-git = [
+  # "https://github.com/vitte-lang/vitte"
+]
+
+# Organisations autorisées sur forges publiques
+[sources.allow-org]
+github    = ["vitte-lang", "roussov"]
+gitlab    = []
+bitbucket = []

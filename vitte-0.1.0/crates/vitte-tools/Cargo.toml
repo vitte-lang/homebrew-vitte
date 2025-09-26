@@ -1,0 +1,160 @@
+[package]
+name        = "vitte-tools"
+description = "Suite CLI pour le langage Vitte : fmt, check, pack, dump, graph, run (wrappers et utilitaires)."
+
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+repository   = { workspace = true }
+homepage     = { workspace = true }
+readme       = { workspace = true }
+
+keywords   = ["vitte", "cli", "formatter", "linter", "bytecode", "graph"]
+categories = ["command-line-utilities", "development-tools"]
+
+[lib]
+name = "vitte_tools"
+path = "src/lib.rs"
+
+# Binaries (activés par features)
+[[bin]]
+name = "vitte-fmt"
+path = "src/bin/fmt.rs"
+required-features = ["fmt-cli"]
+
+[[bin]]
+name = "vitte-check"
+path = "src/bin/check.rs"
+required-features = ["check-cli"]
+
+[[bin]]
+name = "vitte-pack"
+path = "src/bin/pack.rs"
+required-features = ["pack-cli"]
+
+[[bin]]
+name = "vitte-dump"
+path = "src/bin/dump.rs"
+required-features = ["dump-cli"]
+
+[[bin]]
+name = "vitte-graph"
+path = "src/bin/graph.rs"
+required-features = ["graph-cli"]
+
+[[bin]]
+name = "vitte-run"
+path = "src/bin/run.rs"
+required-features = ["run-cli"]
+
+[[bin]]
+name = "vitte-repl"
+path = "src/bin/vitte-repl.rs"
+required-features = ["repl-cli"]
+
+[features]
+# Confort par défaut : binaire "vitte" avec sous-commandes basiques
+default = ["std", "serde", "tracing", "cli", "colors"]
+
+# Environnements
+std        = []
+alloc-only = []
+
+# Observabilité / erreurs
+serde   = ["dep:serde", "dep:serde_json"]
+tracing = ["dep:tracing", "dep:tracing-subscriber"]
+errors  = ["dep:thiserror"]
+
+# Qualité de vie / perfs
+small    = ["dep:smallvec"]
+parallel = ["dep:rayon"]
+notify   = ["dep:notify"]
+glob     = ["dep:ignore", "dep:walkdir", "dep:camino"]
+fmt-config = ["dep:camino"]
+colors = ["dep:yansi"]
+dirs = ["dep:dirs"]
+eval = []
+vm = []
+repl-cli = ["cli", "dep:rustyline", "dirs"]
+
+# Sous-systèmes (activent deps internes)
+fmt   = ["dep:vitte-parser", "dep:vitte-ast"]
+check = ["dep:vitte-ir", "vitte-ir/graph"]             # analyses/CFG si utile
+pack  = ["dep:vitte-runtime", "vitte-runtime/bytecode", "vitte-runtime/compression", "dep:crc32fast", "dep:byteorder", "dep:memmap2"]
+dump  = ["dep:vitte-runtime", "vitte-runtime/bytecode", "dep:crc32fast", "dep:byteorder", "dep:memmap2", "serde"]
+graph = ["dep:vitte-ir", "vitte-ir/graph", "vitte-ir/dot"]
+run   = ["dep:vitte-runtime"]
+
+# Variantes CLI (activent les bins dédiés)
+cli       = ["dep:clap", "serde", "glob"]
+fmt-cli   = ["cli", "fmt"]
+check-cli = ["cli", "check"]
+pack-cli  = ["cli", "pack"]
+dump-cli  = ["cli", "dump"]
+graph-cli = ["cli", "graph"]
+run-cli   = ["cli", "run"]
+
+[dependencies]
+# Internes
+vitte-core    = { path = "../vitte-core",    version = "0.1.0", features = ["std"] }
+vitte-lexer   = { path = "../vitte-lexer",   version = "0.1.0", optional = true }
+vitte-parser  = { path = "../vitte-parser",  version = "0.1.0", optional = true }
+vitte-ast     = { path = "../vitte-ast",     version = "0.1.0", optional = true }
+vitte-ir      = { path = "../vitte-ir",      version = "0.1.0", optional = true }
+vitte-runtime = { path = "../vitte-runtime", version = "0.1.0", optional = true }
+
+# Ergonomie / infra
+thiserror = { workspace = true, optional = true }
+anyhow    = { version = "1" }
+yansi     = { version = "1", optional = true }
+color-eyre = { version = "0.6" }
+rustyline = { version = "17", optional = true }
+dirs      = { version = "5", optional = true }
+camino    = { version = "1.1", optional = true }
+clap      = { version = "4.5", optional = true, features = ["derive"] }
+tracing   = { version = "0.1", optional = true, features = ["attributes", "log", "release_max_level_info"] }
+tracing-subscriber = { version = "0.3", optional = true, features = ["env-filter", "fmt", "ansi", "time"] }
+serde     = { workspace = true, optional = true, default-features = false, features = ["derive"] }
+serde_json = { workspace = true, optional = true }
+
+# Fichiers / globs / watch
+ignore  = { version = "0.4", optional = true }
+walkdir = { version = "2.5", optional = true }
+notify  = { version = "8.2.0", optional = true }
+
+# Bytecode/IO bas niveau (pour pack/dump rapides)
+byteorder = { version = "1",   optional = true }
+crc32fast = { version = "1",   optional = true }
+memmap2   = { version = "0.9", optional = true }
+
+# Perfs
+smallvec = { version = "1.15.1", optional = true }
+rayon    = { version = "1",       optional = true }
+
+# Divers
+bitflags = { version = "2.6" }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }
+proptest          = { workspace = true }
+serde_json        = { workspace = true }
+insta             = { version = "1", features = ["yaml"] }
+tempfile          = { version = "3" }
+
+[package.metadata.docs.rs]
+all-features        = false
+features            = ["std", "serde", "tracing", "fmt", "check", "pack", "dump", "graph", "run"]
+no-default-features = false
+rustdoc-args        = ["--cfg", "docsrs"]
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all                      = "warn"
+pedantic                 = "warn"
+nursery                  = "warn"
+module_name_repetitions  = "allow"
+too_many_lines           = "allow"
+doc_markdown             = "allow"

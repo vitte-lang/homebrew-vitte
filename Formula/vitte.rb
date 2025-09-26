@@ -4,15 +4,10 @@ class Vitte < Formula
   url "https://github.com/vitte-lang/vitte/archive/refs/tags/v0.1.0.tar.gz"
   sha256 "2e6a3cc46d873999b6700e5083bb0335c55baa567ecd956ff9ad088a9bef458b"
   license "MIT"
-  head "https://github.com/vitte-lang/vitte.git", branch: "main"
 
   depends_on "rust" => :build
 
   def install
-  system "cargo", "install", *std_cargo_args, "--path", "crates/vitte"
-end
-
-  test do
-    system "#{bin}/vitte", "--version"
+    system "cargo", "install", *std_cargo_args, "--path", "crates/vitte-cli"
   end
 end
