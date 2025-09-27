@@ -12,8 +12,13 @@ class Vitte < Formula
   depends_on "openssl@3"
 
   def install
-    inreplace "Cargo.toml", /"tests"\s*,?\s*/m, ""
-    system "cargo", "install", *std_cargo_args(path: "crates/vitte-cli")
+    # Nettoie le membre "tests" si présent dans le tarball
+    inreplace "Cargo.toml", /"tests"\s*,?\s*/m, "" if File.read("Cargo.toml").include?("\"tests\"")
+
+    # Installe le CLI avec la VM activée
+    system "cargo", "install",
+           *std_cargo_args(path: "crates/vitte-cli"),
+           "--features", "vm"
   end
 
   test do
