@@ -12,16 +12,29 @@ class Vitte < Formula
   depends_on "openssl@3"
 
   def install
-    # Nettoie le membre "tests" si présent dans le tarball
+    # Corrige le workspace si le tarball référence "tests"
     inreplace "Cargo.toml", /"tests"\s*,?\s*/m, "" if File.read("Cargo.toml").include?("\"tests\"")
 
-    # Installe le CLI avec la VM activée
+    # Construire et installer le binaire avec la VM activée
     system "cargo", "install",
            *std_cargo_args(path: "crates/vitte-cli"),
            "--features", "vm"
+
+    # Conserver tout le projet comme le fait la formule rust (dans libexec/share)
+    (libexec/"src").install Dir["*"]
+  end
+
+  def caveats
+    <<~EOS
+      Le binaire 'vitte' est installé dans #{HOMEBREW_PREFIX}/bin.
+      Le code source complet est conservé dans :
+        #{libexec}/src
+    EOS
   end
 
   test do
     system bin/"vitte", "--version"
+    (testpath/"main.vitte").write('fn main() { println("ok"); }')
+    system bin/"vitte", "run", "main.vitte"
   end
 end
