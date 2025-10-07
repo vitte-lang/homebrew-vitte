@@ -29,8 +29,11 @@ class Vitte < Formula
     odie "Chemin crate introuvable: #{crate_dir}" unless crate_dir.directory?
     manifest_file = File.join(manifest_dir, "Cargo.toml")
     ohai "Using manifest: #{manifest_file}"
-    # Force usage of the concrete package manifest and target binary
-    system "cargo", "install", "--locked", "--manifest-path", manifest_file, "--root", prefix, "--bin", "vitte"
+    # Build in the crate directory to avoid workspace virtual manifest
+    Dir.chdir(manifest_dir) do
+      system "cargo", "build", "--release", "--locked"
+      bin.install "target/release/vitte"
+    end
   end
 
   test do
