@@ -1,29 +1,15 @@
 class Vitte < Formula
-  desc "Vitte programming language (Rust implementation)"
+  desc "Vitte language CLI"
   homepage "https://github.com/vitte-lang/vitte"
-  url "https://github.com/vitte-lang/vitte/releases/download/v0.1.0/vitte-full-v0.1.0.tar.gz"
-  sha256 "3b67a51f3ab5e061e55cc3b91510a5e83c748e328343f78bbe062ceb955038f1"
-  license "MIT"
-  head "https://github.com/vitte-lang/vitte.git", branch: "main"
-
-  livecheck do
-    url :stable
-    strategy :github_latest
-  end
+  url "https://github.com/vitte-lang/vitte/releases/download/v0.1.0/vitte-0.1.0.tar.gz"
+  sha256 "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5"
+  license "Apache-2.0"
 
   def install
-    # Installe le binaire principal
     bin.install "bin/vitte"
-
-    # Facultatif : installe les sources dans /usr/local/share/vitte-src
-    pkgshare.install "share/vitte-src" if Dir.exist?("share/vitte-src")
-
-    # Documentation optionnelle
-    doc.install "README.md" if File.exist?("README.md")
-    doc.install "LICENSE" if File.exist?("LICENSE")
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/vitte --version")
+    system "#{bin}/vitte", "--version"
   end
 end
