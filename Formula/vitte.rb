@@ -10,8 +10,8 @@ class Vitte < Formula
   depends_on "openssl@3"
 
   def install
-    system "cargo", "build", "--release"
-    system "cargo", "install", "--path", ".", "--root", prefix
+    system "cargo", "build", "--release", "--verbose"
+    system "cargo", "install", "--path", ".", "--root", prefix, "--verbose"
   end
 
   test do
