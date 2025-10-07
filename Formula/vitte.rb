@@ -1,3 +1,5 @@
+require "json"
+
 class Vitte < Formula
   desc "Vitte programming language"
   homepage "https://github.com/vitte-lang/vitte"
@@ -13,9 +15,17 @@ class Vitte < Formula
     ENV["CARGO_TERM_PROGRESS_WHEN"] = "always"
     ENV["CARGO_TERM_COLOR"] = "always"
     ENV["CARGO_TERM_PROGRESS_WIDTH"] = "80"
-    system "cargo", "build", "--release"
-    ohai "Installing..."
-    system "cargo", "install", "--path", ".", "--root", prefix
+
+    # Résout l’erreur du workspace : trouve le crate binaire
+    metadata_json = Utils.safe_popen_read("cargo", "metadata", "--format-version=1", "--no-deps")
+    metadata = JSON.parse(metadata_json)
+    bin_pkg = metadata["packages"].find { |p| p["targets"].any? { |t| t["kind"].include?("bin") && t["name"] == "vitte" } } ||
+              metadata["packages"].find { |p| p["targets"].any? { |t| t["kind"].include?("bin") } }
+    odie "Aucun package binaire trouvé dans le workspace" unless bin_pkg
+
+    manifest_dir = File.dirname(bin_pkg["manifest_path"])
+    ohai "Installing from: #{manifest_dir} (package: #{bin_pkg["name"]})"
+    system "cargo", "install", "--locked", "--path", manifest_dir, "--root", prefix
   end
 
   test do
