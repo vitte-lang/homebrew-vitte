@@ -11,13 +11,22 @@ class Vitte < Formula
 
   def install
     ohai "Starting Cargo build..."
+    start_time = Time.now
+    puts "Build started at: #{start_time}"
     IO.popen(["cargo", "build", "--release", "--verbose"], err: [:child, :out]) do |io|
-      io.each { |line| puts line }
+      io.each do |line|
+        puts "[#{Time.now.strftime("%H:%M:%S")}] #{line}"
+        $stdout.flush
+      end
     end
     ohai "Installing..."
     IO.popen(["cargo", "install", "--path", ".", "--root", prefix, "--verbose"], err: [:child, :out]) do |io|
-      io.each { |line| puts line }
+      io.each do |line|
+        puts "[#{Time.now.strftime("%H:%M:%S")}] #{line}"
+        $stdout.flush
+      end
     end
+    puts "Build finished at: #{Time.now}"
   end
 
   test do
