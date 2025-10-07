@@ -25,7 +25,12 @@ class Vitte < Formula
 
     manifest_dir = File.dirname(bin_pkg["manifest_path"])
     ohai "Installing from: #{manifest_dir} (package: #{bin_pkg["name"]})"
-    system "cargo", "install", "--locked", "--manifest-path", File.join(manifest_dir, "Cargo.toml"), "--root", prefix
+    crate_dir = Pathname.new(manifest_dir)
+    odie "Chemin crate introuvable: #{crate_dir}" unless crate_dir.directory?
+    ohai "cd #{crate_dir}"
+    Dir.chdir(crate_dir) do
+      system "cargo", "install", "--locked", "--path", ".", "--root", prefix
+    end
   end
 
   test do
