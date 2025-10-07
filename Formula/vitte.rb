@@ -11,7 +11,7 @@ class Vitte < Formula
 
   def install
     system "cargo", "build", "--release"
-    bin.install "target/release/vitte"
+    system "cargo", "install", "--path", ".", "--root", prefix
   end
 
   test do
