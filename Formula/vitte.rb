@@ -25,7 +25,9 @@ class Vitte < Formula
 
     manifest_dir = File.dirname(bin_pkg["manifest_path"])
     ohai "Installing from: #{manifest_dir} (package: #{bin_pkg["name"]})"
-    system "cargo", "install", "--locked", "--path", manifest_dir, "--root", prefix
+    Dir.chdir(manifest_dir) do
+      system "cargo", "install", "--locked", "--path", ".", "--root", prefix
+    end
   end
 
   test do
