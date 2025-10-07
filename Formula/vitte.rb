@@ -31,24 +31,19 @@ class Vitte < Formula
       bin_targets = pkg["targets"].select { |t| t["kind"].include?("bin") }.map { |t| t["name"] }
       next if bin_targets.empty?
 
-      ohai "Building package: #{pkg["name"]} (#{manifest_dir})"
+      ohai "Installing package: #{pkg["name"]} (#{manifest_dir})"
       Dir.chdir(manifest_dir) do
-        system "cargo", "build", "--release", "--locked", "--bins"
-        bin_targets.each do |tname|
-          path = File.join("target", "release", tname)
-          next unless File.exist?(path)
-          bin.install path
-          all_installed << tname
-        end
+        system "cargo", "install", "--locked", "--path", ".", "--root", prefix, "--bins"
       end
+      all_installed.concat(bin_targets)
     end
 
-    odie "Aucun binaire construit dans le workspace" if all_installed.empty?
-    ohai "Installed binaries: #{all_installed.uniq.join(", ")}"
+    odie "Aucun binaire installé dans #{bin}" if Dir.children(bin).empty?
+    ohai "Installed binaries: #{Dir.children(bin).sort.join(", ")}"
 
     # Fournir une commande 'vitte' stable si inexistante
-    unless all_installed.include?("vitte")
-      primary = all_installed.first
+    unless Dir.children(bin).include?("vitte")
+      primary = Dir.children(bin).first
       (bin/"vitte").write <<~SH
         #!/bin/sh
         exec "#{bin}/#{primary}" "$@"
