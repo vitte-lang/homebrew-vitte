@@ -16,32 +16,45 @@ class Vitte < Formula
     ENV["CARGO_TERM_COLOR"] = "always"
     ENV["CARGO_TERM_PROGRESS_WIDTH"] = "80"
 
-    # Inspect workspace and find the first package exposing >=1 binary target
-    metadata = JSON.parse(Utils.safe_popen_read("cargo", "metadata", "--format-version=1", "--no-deps"))
-    bin_pkg = metadata["packages"].find { |p| p["targets"].any? { |t| t["kind"].include?("bin") } }
-    odie "Aucun package binaire trouvé dans le workspace" unless bin_pkg
+    md = JSON.parse(Utils.safe_popen_read("cargo", "metadata", "--format-version=1", "--no-deps"))
+    workspace_ids = md["workspace_members"] || md.fetch("packages", []).map { |p| p["id"] }
+    pkgs = md["packages"].select { |p|
+      workspace_ids.include?(p["id"]) &&
+      p["targets"].any? { |t| t["kind"].include?("bin") }
+    }
+    odie "Aucun package binaire dans le workspace" if pkgs.empty?
 
-    manifest_dir = File.dirname(bin_pkg["manifest_path"])
-    bin_targets = bin_pkg["targets"].select { |t| t["kind"].include?("bin") }.map { |t| t["name"] }
-    odie "Aucune target binaire déclarée" if bin_targets.empty?
+    all_installed = []
 
-    ohai "Building in: #{manifest_dir} (package: #{bin_pkg["name"]})"
-    Dir.chdir(manifest_dir) do
-      # Build all binary targets for this package
-      system "cargo", "build", "--release", "--locked", "--bins"
+    pkgs.each do |pkg|
+      manifest_dir = File.dirname(pkg["manifest_path"])
+      bin_targets = pkg["targets"].select { |t| t["kind"].include?("bin") }.map { |t| t["name"] }
+      next if bin_targets.empty?
 
-      # Install any produced binaries
-      installed = []
-      bin_targets.each do |tname|
-        path = File.join("target", "release", tname)
-        if File.exist?(path)
+      ohai "Building package: #{pkg["name"]} (#{manifest_dir})"
+      Dir.chdir(manifest_dir) do
+        system "cargo", "build", "--release", "--locked", "--bins"
+        bin_targets.each do |tname|
+          path = File.join("target", "release", tname)
+          next unless File.exist?(path)
           bin.install path
-          installed << tname
+          all_installed << tname
         end
       end
+    end
 
-      odie "Aucun binaire construit dans target/release (#{bin_targets.join(", ")})" if installed.empty?
-      ohai "Installed binaries: #{installed.join(", ")}"
+    odie "Aucun binaire construit dans le workspace" if all_installed.empty?
+    ohai "Installed binaries: #{all_installed.uniq.join(", ")}"
+
+    # Fournir une commande 'vitte' stable si inexistante
+    unless all_installed.include?("vitte")
+      primary = all_installed.first
+      (bin/"vitte").write <<~SH
+        #!/bin/sh
+        exec "#{bin}/#{primary}" "$@"
+      SH
+      (bin/"vitte").chmod 0755
+      ohai "Created shim 'vitte' -> #{primary}"
     end
   end
 
