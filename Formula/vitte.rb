@@ -10,8 +10,14 @@ class Vitte < Formula
   depends_on "openssl@3"
 
   def install
-    system "cargo", "build", "--release", "--verbose"
-    system "cargo", "install", "--path", ".", "--root", prefix, "--verbose"
+    ohai "Starting Cargo build..."
+    IO.popen(["cargo", "build", "--release", "--verbose"], err: [:child, :out]) do |io|
+      io.each { |line| puts line }
+    end
+    ohai "Installing..."
+    IO.popen(["cargo", "install", "--path", ".", "--root", prefix, "--verbose"], err: [:child, :out]) do |io|
+      io.each { |line| puts line }
+    end
   end
 
   test do
