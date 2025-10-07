@@ -1,3 +1,4 @@
+require "pty"
 class Vitte < Formula
   desc "Vitte programming language"
   homepage "https://github.com/vitte-lang/vitte"
@@ -10,21 +11,18 @@ class Vitte < Formula
   depends_on "openssl@3"
 
   def install
+    ENV["CARGO_TERM_PROGRESS_WHEN"] = "always"
+    ENV["CARGO_TERM_COLOR"] = "always"
+    ENV["CARGO_TERM_PROGRESS_WIDTH"] = "80"
     ohai "Starting Cargo build..."
     start_time = Time.now
     puts "Build started at: #{start_time}"
-    IO.popen(["cargo", "build", "--release", "--verbose"], err: [:child, :out]) do |io|
-      io.each do |line|
-        puts "[#{Time.now.strftime("%H:%M:%S")}] #{line}"
-        $stdout.flush
-      end
+    PTY.spawn({"CARGO_TERM_PROGRESS_WHEN"=>"always", "CARGO_TERM_COLOR"=>"always"}, "cargo", "build", "--release") do |r, _w, _pid|
+      r.each { |line| puts line }
     end
     ohai "Installing..."
-    IO.popen(["cargo", "install", "--path", ".", "--root", prefix, "--verbose"], err: [:child, :out]) do |io|
-      io.each do |line|
-        puts "[#{Time.now.strftime("%H:%M:%S")}] #{line}"
-        $stdout.flush
-      end
+    PTY.spawn({"CARGO_TERM_PROGRESS_WHEN"=>"always", "CARGO_TERM_COLOR"=>"always"}, "cargo", "install", "--path", ".", "--root", prefix) do |r, _w, _pid|
+      r.each { |line| puts line }
     end
     puts "Build finished at: #{Time.now}"
   end
