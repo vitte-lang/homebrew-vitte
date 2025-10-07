@@ -27,10 +27,10 @@ class Vitte < Formula
     ohai "Installing from: #{manifest_dir} (package: #{bin_pkg["name"]})"
     crate_dir = Pathname.new(manifest_dir)
     odie "Chemin crate introuvable: #{crate_dir}" unless crate_dir.directory?
-    ohai "cd #{crate_dir}"
-    Dir.chdir(crate_dir) do
-      system "cargo", "install", "--locked", "--path", ".", "--root", prefix
-    end
+    manifest_file = File.join(manifest_dir, "Cargo.toml")
+    ohai "Using manifest: #{manifest_file}"
+    # Force usage of the concrete package manifest and target binary
+    system "cargo", "install", "--locked", "--manifest-path", manifest_file, "--root", prefix, "--bin", "vitte"
   end
 
   test do
