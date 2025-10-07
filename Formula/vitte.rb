@@ -16,23 +16,32 @@ class Vitte < Formula
     ENV["CARGO_TERM_COLOR"] = "always"
     ENV["CARGO_TERM_PROGRESS_WIDTH"] = "80"
 
-    # Résout l’erreur du workspace : trouve le crate binaire
-    metadata_json = Utils.safe_popen_read("cargo", "metadata", "--format-version=1", "--no-deps")
-    metadata = JSON.parse(metadata_json)
-    bin_pkg = metadata["packages"].find { |p| p["targets"].any? { |t| t["kind"].include?("bin") && t["name"] == "vitte" } } ||
-              metadata["packages"].find { |p| p["targets"].any? { |t| t["kind"].include?("bin") } }
+    # Inspect workspace and find the first package exposing >=1 binary target
+    metadata = JSON.parse(Utils.safe_popen_read("cargo", "metadata", "--format-version=1", "--no-deps"))
+    bin_pkg = metadata["packages"].find { |p| p["targets"].any? { |t| t["kind"].include?("bin") } }
     odie "Aucun package binaire trouvé dans le workspace" unless bin_pkg
 
     manifest_dir = File.dirname(bin_pkg["manifest_path"])
-    ohai "Installing from: #{manifest_dir} (package: #{bin_pkg["name"]})"
-    crate_dir = Pathname.new(manifest_dir)
-    odie "Chemin crate introuvable: #{crate_dir}" unless crate_dir.directory?
-    manifest_file = File.join(manifest_dir, "Cargo.toml")
-    ohai "Using manifest: #{manifest_file}"
-    # Build in the crate directory to avoid workspace virtual manifest
+    bin_targets = bin_pkg["targets"].select { |t| t["kind"].include?("bin") }.map { |t| t["name"] }
+    odie "Aucune target binaire déclarée" if bin_targets.empty?
+
+    ohai "Building in: #{manifest_dir} (package: #{bin_pkg["name"]})"
     Dir.chdir(manifest_dir) do
-      system "cargo", "build", "--release", "--locked"
-      bin.install "target/release/vitte"
+      # Build all binary targets for this package
+      system "cargo", "build", "--release", "--locked", "--bins"
+
+      # Install any produced binaries
+      installed = []
+      bin_targets.each do |tname|
+        path = File.join("target", "release", tname)
+        if File.exist?(path)
+          bin.install path
+          installed << tname
+        end
+      end
+
+      odie "Aucun binaire construit dans target/release (#{bin_targets.join(", ")})" if installed.empty?
+      ohai "Installed binaries: #{installed.join(", ")}"
     end
   end
 
