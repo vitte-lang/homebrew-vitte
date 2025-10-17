@@ -12,28 +12,31 @@ class Vitte < Formula
   depends_on "git" => :build
 
   def install
-    # Reproduit la sortie la plus détaillée possible du build Rust
+    # Verbosité et logs rustc complets
     ENV["CARGO_TERM_VERBOSE"] = "true"
     ENV["CARGO_TERM_PROGRESS_WHEN"] = "always"
     ENV["RUST_BACKTRACE"] = "full"
+    ENV["RUST_LOG"] = "debug"
     ENV["RUSTC_LOG"] = "rustc::codegen=info"
-    ENV["RUST_LOG"] = "cargo::core::compiler::fingerprint=debug"
 
     odie "Erreur: cargo introuvable" unless which("cargo")
 
-    # Affiche le commit pour le suivi
+    # Affiche le commit courant du build
     system "git", "rev-parse", "HEAD"
 
-    # Compilation stricte et verbeuse (-vv = logs complets rustc)
-    system "cargo", "install",
-           "--locked",
-           "--root", prefix,
-           "--path", ".",
-           "-vv"
+    # Compilation stricte et verbeuse du vrai crate CLI
+    cd "crates/vitte-cli" do
+      system "cargo", "install",
+             "--locked",
+             "--root", prefix,
+             "--path", ".",
+             "-vv"
+    end
 
-    # Lien symbolique vitte -> vitte-bin
+    # Lien symbolique vers vitte-bin (nom interne)
     bin.install_symlink "vitte-bin" => "vitte" if (bin/"vitte-bin").exist?
 
+    # Nettoyage du dossier temporaire
     rm_rf buildpath
   end
 
