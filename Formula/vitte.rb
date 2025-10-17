@@ -11,20 +11,8 @@ class Vitte < Formula
   depends_on "rust" => :build
 
   def install
-    # Isoler Cargo pour éviter les conflits d'environnement
-    ENV["CARGO_HOME"] = (buildpath/"cargo_home").to_s
-    ENV["RUSTUP_HOME"] = (buildpath/"rustup_home").to_s
-
-    # Crée le lockfile si inexistant
-    system "cargo", "generate-lockfile" unless File.exist?("Cargo.lock")
-
-    # Compilation complète depuis la racine (Cargo détecte les bins automatiquement)
     system "cargo", "install", *std_cargo_args
-
-    # Si le binaire s'appelle vitte-bin, créer un alias vitte
-    Dir.chdir(bin) do
-      ln_s "vitte-bin", "vitte" if File.exist?("vitte-bin") && !File.exist?("vitte")
-    end
+    bin.install_symlink "vitte-bin" => "vitte" if (bin/"vitte-bin").exist?
   end
 
   test do
