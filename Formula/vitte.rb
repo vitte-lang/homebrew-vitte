@@ -1,38 +1,22 @@
 class Vitte < Formula
   desc "Unified Vitte language toolchain and CLI"
   homepage "https://vitte-lang.github.io/vitte/"
-  url "https://github.com/vitte-lang/vitte.git",
-      branch: "main",
-      revision: "ba073abc56c9fa28e9d79ee84306dc1c0f07e4a9"
-  version "0.1.0"
+  url "https://github.com/vitte-lang/vitte/releases/download/v0.1.0/vitte-0.1.0.tar.gz"
+  sha256 "c2a49c4e99efce0adf4bd6955fb8471eda5146f42ffc3632dfeb93b0c1ce3f48"
   license "Apache-2.0"
   head "https://github.com/vitte-lang/vitte.git", branch: "main"
 
   depends_on "rust" => :build
-  depends_on "git" => :build
 
   def install
-    # Verbosité Cargo
-    ENV["CARGO_TERM_VERBOSE"] = "true"
-    ENV["CARGO_TERM_PROGRESS_WHEN"] = "always"
-    ENV["RUST_BACKTRACE"] = "full"
-
-    # Isoler Cargo du HOME
     ENV["CARGO_HOME"]  = (buildpath/"cargo_home").to_s
     ENV["RUSTUP_HOME"] = (buildpath/"rustup_home").to_s
-
-    # Build complet du workspace en release, ultra verbeux
-    system "cargo", "fetch", "--locked" rescue nil
-    system "cargo", "build", "--workspace", "--release", "-vv"
-
-    # Installer la CLI depuis le crate non-virtuel
+    # la source extraite contient tout; on installe la CLI
     cd "crates/vitte-cli" do
-      args = ["install", "--root", prefix, "--path", ".", "-vv"]
-      args.insert(1, "--locked") if File.exist?("Cargo.lock")
+      args = ["install","--root", prefix, "--path","."]
+      args.insert(1,"--locked") if File.exist?("Cargo.lock")
       system "cargo", *args
     end
-
-    # Alias vitte -> vitte-bin si présent
     bin.install_symlink "vitte-bin" => "vitte" if (bin/"vitte-bin").exist?
   end
 
