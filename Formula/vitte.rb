@@ -12,13 +12,12 @@ class Vitte < Formula
   depends_on "git" => :build
 
   def install
-    # Cloner le dépôt (Homebrew a déjà fetch, mais cette ligne rend le comportement explicite)
-    system "git", "clone", "--depth", "1", "https://github.com/vitte-lang/vitte.git", "vitte-src"
-    cd "vitte-src" do
-      system "cargo", "install", "--locked", "--root", prefix
-    end
-
-    # Lier le binaire vitte-bin -> vitte si nécessaire
+    ENV["CARGO_TERM_VERBOSE"] = "true"   # verbosité cargo
+    system "cargo", "install",
+           "--locked",
+           "--root", prefix,
+           "--path", ".",      # build depuis le checkout Homebrew
+           "--verbose"
     bin.install_symlink "vitte-bin" => "vitte" if (bin/"vitte-bin").exist?
   end
 
