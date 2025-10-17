@@ -11,15 +11,16 @@ class Vitte < Formula
   depends_on "rust" => :build
 
   def install
-    # Génère un Cargo.lock si absent
     system "cargo", "generate-lockfile" unless File.exist?("Cargo.lock")
-
-    # Installe le binaire depuis le sous-répertoire src
     cd "src" do
       system "cargo", "install", *std_cargo_args
     end
   end
 
+  test do
+    system "#{bin}/vitte", "--version"
+  end
+end
   test do
     assert_match version.to_s, shell_output("#{bin}/vitte --version")
   end
