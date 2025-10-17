@@ -12,13 +12,29 @@ class Vitte < Formula
   depends_on "git" => :build
 
   def install
-    ENV["CARGO_TERM_VERBOSE"] = "true"   # verbosité cargo
+    # Active le mode verbeux complet pour Cargo et Homebrew
+    ENV["CARGO_TERM_VERBOSE"] = "true"
+    ENV["RUST_BACKTRACE"] = "full"
+    ENV["RUST_LOG"] = "debug"
+    ENV.deparallelize # pour afficher les logs séquentiellement
+
+    odie "Erreur: cargo introuvable" unless which("cargo")
+
+    # Affiche le commit actuel pour traçabilité
+    system "git", "rev-parse", "HEAD"
+
+    # Compilation détaillée
     system "cargo", "install",
            "--locked",
            "--root", prefix,
-           "--path", ".",      # build depuis le checkout Homebrew
+           "--path", ".",
            "--verbose"
+
+    # Lien symbolique vers le binaire principal
     bin.install_symlink "vitte-bin" => "vitte" if (bin/"vitte-bin").exist?
+
+    # Nettoyage du dossier temporaire après build
+    rm_rf buildpath
   end
 
   test do
