@@ -1,33 +1,22 @@
+require "language/rust"
+
 class Vitte < Formula
-  desc "Langage de programmation moderne inspiré de Rust"
-  homepage "https://github.com/vitte-lang/vitte"
+  desc "Unified Vitte language toolchain and CLI"
+  homepage "https://vitte-lang.github.io/vitte/"
   url "https://github.com/vitte-lang/vitte.git",
-      tag:      "v0.1.0",
-      revision: "0ae6d7f41ed060a0e7321e2356353d6818033b6c"
+      branch: "main",
+      revision: "ba073abc56c9fa28e9d79ee84306dc1c0f07e4a9"
   version "0.1.0"
-  license "MIT"
+  license "Apache-2.0"
   head "https://github.com/vitte-lang/vitte.git", branch: "main"
 
-
+  depends_on "rust" => :build
 
   def install
-    system "cargo", "install", *std_cargo_args
-  end
-
-  def caveats
-    <<~EOS
-      Le binaire 'vitte' a été installé dans :
-        #{HOMEBREW_PREFIX}/bin/vitte
-
-      Pour vérifier :
-        vitte --version
-
-      Pour mettre à jour :
-        brew update && brew upgrade vitte
-    EOS
+    system "cargo", "install", *std_cargo_args(path: "src")
   end
 
   test do
-    assert_match "vitte", shell_output("#{bin}/vitte --version")
+    assert_match version.to_s, shell_output("#{bin}/vitte --version")
   end
 end
