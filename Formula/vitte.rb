@@ -2,7 +2,7 @@ class Vitte < Formula
   desc "Unified Vitte language toolchain and CLI"
   homepage "https://vitte-lang.github.io/vitte/"
   url "https://github.com/vitte-lang/vitte/releases/download/v0.1.0/vitte-0.1.0.tar.gz"
-  sha256 "c2a49c4e99efce0adf4bd6955fb8471eda5146f42ffc3632dfeb93b0c1ce3f48"
+  sha256 "29591c1b413398b9497210a7884508c3e2a1638ccb6c0a85232acdc138066dbf"
   license "Apache-2.0"
   head "https://github.com/vitte-lang/vitte.git", branch: "main"
 
