@@ -1,8 +1,5 @@
-cd ~/Documents/Github/homebrew-vitte
-mkdir -p Formula
-cat > Formula/vitte.rb <<'RB'
 class Vitte < Formula
-  desc "Langage de programmation Vitte"
+  desc "Langage de programmation moderne inspiré de Rust"
   homepage "https://github.com/vitte-lang/vitte"
   url "https://github.com/vitte-lang/vitte.git",
       tag:      "v0.1.0",
@@ -10,12 +7,27 @@ class Vitte < Formula
   version "0.1.0"
   license "MIT"
   head "https://github.com/vitte-lang/vitte.git", branch: "main"
-  depends_on "rust" => :build
+
+
+
   def install
     system "cargo", "install", *std_cargo_args
   end
+
+  def caveats
+    <<~EOS
+      Le binaire 'vitte' a été installé dans :
+        #{HOMEBREW_PREFIX}/bin/vitte
+
+      Pour vérifier :
+        vitte --version
+
+      Pour mettre à jour :
+        brew update && brew upgrade vitte
+    EOS
+  end
+
   test do
-    system "#{bin}/vitte", "--version"
+    assert_match "vitte", shell_output("#{bin}/vitte --version")
   end
 end
-RB
