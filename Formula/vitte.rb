@@ -1,5 +1,3 @@
-require "language/rust"
-
 class Vitte < Formula
   desc "Unified Vitte language toolchain and CLI"
   homepage "https://vitte-lang.github.io/vitte/"
@@ -13,7 +11,8 @@ class Vitte < Formula
   depends_on "rust" => :build
 
   def install
-    system "cargo", "install", *std_cargo_args(path: "src")
+    system "cargo", "generate-lockfile" unless File.exist?("Cargo.lock")
+    system "cargo", "install", *std_cargo_args, "--path", "src"
   end
 
   test do
