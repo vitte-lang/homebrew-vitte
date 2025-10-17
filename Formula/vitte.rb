@@ -9,13 +9,16 @@ class Vitte < Formula
   head "https://github.com/vitte-lang/vitte.git", branch: "main"
 
   depends_on "rust" => :build
+  depends_on "git" => :build
 
   def install
-    ENV["CARGO_HOME"] = (buildpath/"cargo_home").to_s
-    ENV["RUSTUP_HOME"] = (buildpath/"rustup_home").to_s
-    cd "crates/vitte-cli" do
-      system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    # Cloner le dépôt (Homebrew a déjà fetch, mais cette ligne rend le comportement explicite)
+    system "git", "clone", "--depth", "1", "https://github.com/vitte-lang/vitte.git", "vitte-src"
+    cd "vitte-src" do
+      system "cargo", "install", "--locked", "--root", prefix
     end
+
+    # Lier le binaire vitte-bin -> vitte si nécessaire
     bin.install_symlink "vitte-bin" => "vitte" if (bin/"vitte-bin").exist?
   end
 
