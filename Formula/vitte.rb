@@ -11,16 +11,18 @@ class Vitte < Formula
   depends_on "rust" => :build
 
   def install
+    ENV["CARGO_HOME"] = (buildpath/"cargo_home").to_s
+    ENV["RUSTUP_HOME"] = (buildpath/"rustup_home").to_s
     system "cargo", "generate-lockfile" unless File.exist?("Cargo.lock")
+
     cd "src" do
       system "cargo", "install", *std_cargo_args
     end
+
+    # crée vitte -> vitte-bin
+    bin.install_symlink "vitte-bin" => "vitte"
   end
 
-  test do
-    system "#{bin}/vitte", "--version"
-  end
-end
   test do
     assert_match version.to_s, shell_output("#{bin}/vitte --version")
   end
