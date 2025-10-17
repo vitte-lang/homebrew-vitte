@@ -1,30 +1,11 @@
-class Vitte < Formula
-  desc "Unified Vitte language toolchain and CLI"
-  homepage "https://vitte-lang.github.io/vitte/"
-  url "https://github.com/vitte-lang/vitte.git",
-      branch: "main",
-      revision: "ba073abc56c9fa28e9d79ee84306dc1c0f07e4a9"
-  version "0.1.0"
-  license "Apache-2.0"
-  head "https://github.com/vitte-lang/vitte.git", branch: "main"
+def install
+  ENV["CARGO_HOME"] = (buildpath/"cargo_home").to_s
+  ENV["RUSTUP_HOME"] = (buildpath/"rustup_home").to_s
+  system "cargo", "generate-lockfile" unless File.exist?("Cargo.lock")
 
-  depends_on "rust" => :build
-
-  def install
-    ENV["CARGO_HOME"] = (buildpath/"cargo_home").to_s
-    ENV["RUSTUP_HOME"] = (buildpath/"rustup_home").to_s
-
-    # Génère le lockfile s’il n’existe pas
-    system "cargo", "generate-lockfile" unless File.exist?("Cargo.lock")
-
-    # Compile et installe le binaire CLI (workspace)
-    system "cargo", "install", *std_cargo_args, "--path", "crates/vitte-cli"
-
-    # Crée le lien vitte -> vitte-bin si nécessaire
-    bin.install_symlink "vitte-bin" => "vitte" if (bin/"vitte-bin").exist?
+  cd "crates/vitte-cli" do
+    system "cargo", "install", *std_cargo_args
   end
 
-  test do
-    system "#{bin}/vitte", "--version"
-  end
+  bin.install_symlink "vitte-bin" => "vitte" if (bin/"vitte-bin").exist?
 end
