@@ -12,18 +12,27 @@ class Vitte < Formula
   depends_on "git" => :build
 
   def install
-    # Isoler Cargo pour empêcher l’écriture dans ~/.cargo
+    # Verbosité Cargo
+    ENV["CARGO_TERM_VERBOSE"] = "true"
+    ENV["CARGO_TERM_PROGRESS_WHEN"] = "always"
+    ENV["RUST_BACKTRACE"] = "full"
+
+    # Isoler Cargo du HOME
     ENV["CARGO_HOME"]  = (buildpath/"cargo_home").to_s
     ENV["RUSTUP_HOME"] = (buildpath/"rustup_home").to_s
 
-    # Compiler et installer depuis le crate CLI
+    # Build complet du workspace en release, ultra verbeux
+    system "cargo", "fetch", "--locked" rescue nil
+    system "cargo", "build", "--workspace", "--release", "-vv"
+
+    # Installer la CLI depuis le crate non-virtuel
     cd "crates/vitte-cli" do
       args = ["install", "--root", prefix, "--path", ".", "-vv"]
       args.insert(1, "--locked") if File.exist?("Cargo.lock")
       system "cargo", *args
     end
 
-    # Créer le lien symbolique vitte -> vitte-bin si présent
+    # Alias vitte -> vitte-bin si présent
     bin.install_symlink "vitte-bin" => "vitte" if (bin/"vitte-bin").exist?
   end
 
